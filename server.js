@@ -4,9 +4,9 @@ import cors from 'cors';
 import crypto from 'crypto';
 import fetch from 'node-fetch';
 
-const PAYNOW_API_URL = "https://api.sandbox.paynow.pl/v3/payments";
-const PAYNOW_API_KEY = process.env.PAYNOW_API_KEY;    // Set in Render.com
-const PAYNOW_SIG_KEY = process.env.PAYNOW_SIG_KEY;    // Set in Render.com
+const API_URL = "https://api.sandbox.paynow.pl/v3/payments";
+const API_KEY = process.env.API_KEY;    // Set in Render.com
+const SIGNATURE_KEY = process.env.SIGNATURE_KEY;    // Set in Render.com
 
 const app = express();
 app.use(cors());
@@ -46,13 +46,13 @@ app.post('/create-payment', async (req, res) => {
 
     const idempotencyKey = crypto.randomUUID();
     // Signature: HMAC SHA256 over payload only (API expects this in v3)
-    const signature = computeSignature(payload, PAYNOW_SIG_KEY);
+    const signature = computeSignature(payload, SIGNATURE_KEY);
 
-    const response = await fetch(PAYNOW_API_URL, {
+    const response = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Api-Key": PAYNOW_API_KEY,
+        "Api-Key": API_KEY,
         "Signature": signature,
         "Idempotency-Key": idempotencyKey
       },
