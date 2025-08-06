@@ -4,9 +4,11 @@ import cors from 'cors';
 import crypto from 'crypto';
 import fetch from 'node-fetch';
 
-const API_URL = "https://api.sandbox.paynow.pl/v3/payments";
-const API_KEY = process.env.API_KEY;    // Set in Render.com
-const SIGNATURE_KEY = process.env.SIGNATURE_KEY;    // Set in Render.com
+const PAYNOW_API_URL = "https://api.sandbox.paynow.pl/v3/payments";
+const PAYNOW_API_KEY = process.env.PAYNOW_API_KEY;
+const PAYNOW_SIG_KEY = process.env.PAYNOW_SIG_KEY;
+
+const CONTINUE_URL = "https://www.fundacjaobronynarodowej.pl/wesprzyj-nas"; // User returns here after Paynow
 
 const app = express();
 app.use(cors());
@@ -40,19 +42,19 @@ app.post('/create-payment', async (req, res) => {
       buyer: {
         email: email,
         firstName: name
-      }
+      },
+      continueUrl: CONTINUE_URL
     };
     const payload = JSON.stringify(paymentRequest);
 
     const idempotencyKey = crypto.randomUUID();
-    // Signature: HMAC SHA256 over payload only (API expects this in v3)
-    const signature = computeSignature(payload, SIGNATURE_KEY);
+    const signature = computeSignature(payload, PAYNOW_SIG_KEY);
 
-    const response = await fetch(API_URL, {
+    const response = await fetch(PAYNOW_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Api-Key": API_KEY,
+        "Api-Key": PAYNOW_API_KEY,
         "Signature": signature,
         "Idempotency-Key": idempotencyKey
       },
@@ -71,7 +73,6 @@ app.post('/create-payment', async (req, res) => {
   }
 });
 
-// Health check
 app.get('/', (req, res) => res.send('Paynow backend is running!'));
 
 const PORT = process.env.PORT || 3000;
